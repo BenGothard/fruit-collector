@@ -16,7 +16,9 @@ body { margin: 0; overflow: hidden; }
   margin: 10px 0;
 }
 
-#startBtn {
+#startBtn,
+#pauseBtn,
+#restartBtn {
   pointer-events: auto;
   padding: 10px 20px;
   font-size: 18px;

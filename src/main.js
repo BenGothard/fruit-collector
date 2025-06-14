@@ -2,15 +2,19 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const restartBtn = document.getElementById('restartBtn');
 const instructionsEl = document.getElementById('instructions');
 const gameOverEl = document.getElementById('gameOver');
 
 let running = false;
+let paused = false;
 let fruitInterval;
 let bombInterval;
 let difficultyInterval;
 let difficulty = 1;
-let bombSpawnTime = 7000;
+let bombSpawnTime = 4000;
+const fruitEmojis = ['🍎', '🍌', '🍓', '🍇', '🍉', '🍊'];
 
 const state = {
   score: 0,
@@ -33,13 +37,15 @@ const createFruit = () => {
     x: Math.random() * (canvas.width - radius * 2) + radius,
     y: -radius,
     radius,
-    speed: 2 + Math.random() * 3
+    speed: 4 + Math.random() * 3,
+    emoji: fruitEmojis[Math.floor(Math.random() * fruitEmojis.length)]
   });
 };
 
 const resetFruit = fruit => {
   fruit.x = Math.random() * (canvas.width - fruit.radius * 2) + fruit.radius;
   fruit.y = -fruit.radius;
+  fruit.emoji = fruitEmojis[Math.floor(Math.random() * fruitEmojis.length)];
 };
 
 const createBomb = () => {
@@ -48,13 +54,15 @@ const createBomb = () => {
     x: Math.random() * (canvas.width - radius * 2) + radius,
     y: -radius,
     radius,
-    speed: (2 + Math.random() * 2) * difficulty
+    speed: (4 + Math.random() * 2) * difficulty,
+    emoji: '💣'
   });
 };
 
 const resetBomb = bomb => {
   bomb.x = Math.random() * (canvas.width - bomb.radius * 2) + bomb.radius;
   bomb.y = -bomb.radius;
+  bomb.emoji = '💣';
 };
 
 const checkCollision = (fruit, basket) =>
@@ -126,17 +134,17 @@ const drawBasket = () => {
 };
 
 const drawFruit = fruit => {
-  ctx.beginPath();
-  ctx.fillStyle = 'red';
-  ctx.arc(fruit.x, fruit.y, fruit.radius, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.font = `${fruit.radius * 2}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(fruit.emoji, fruit.x, fruit.y);
 };
 
 const drawBomb = bomb => {
-  ctx.beginPath();
-  ctx.fillStyle = 'black';
-  ctx.arc(bomb.x, bomb.y, bomb.radius, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.font = `${bomb.radius * 2}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(bomb.emoji, bomb.x, bomb.y);
 };
 
 const updateScore = () => {
@@ -155,15 +163,19 @@ const increaseDifficulty = () => {
 
 const endGame = () => {
   running = false;
+  paused = false;
   clearInterval(fruitInterval);
   clearInterval(bombInterval);
   clearInterval(difficultyInterval);
   gameOverEl.style.display = 'block';
   startBtn.style.display = 'inline-block';
+  pauseBtn.style.display = 'none';
+  restartBtn.style.display = 'none';
   instructionsEl.style.display = 'block';
 };
 
 const gameLoop = () => {
+  if (paused) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   updateBasket();
   updateFruits();
@@ -172,28 +184,60 @@ const gameLoop = () => {
   state.fruits.forEach(drawFruit);
   state.bombs.forEach(drawBomb);
   updateScore();
-  if (running) requestAnimationFrame(gameLoop);
+  if (running && !paused) requestAnimationFrame(gameLoop);
+};
+
+const pauseGame = () => {
+  if (!running) return;
+  if (!paused) {
+    paused = true;
+    pauseBtn.textContent = 'Resume';
+    clearInterval(fruitInterval);
+    clearInterval(bombInterval);
+    clearInterval(difficultyInterval);
+  } else {
+    paused = false;
+    pauseBtn.textContent = 'Pause';
+    fruitInterval = setInterval(createFruit, 5000);
+    bombInterval = setInterval(createBomb, bombSpawnTime);
+    difficultyInterval = setInterval(increaseDifficulty, 3000);
+    requestAnimationFrame(gameLoop);
+  }
+};
+
+const restartGame = () => {
+  if (!running) return startGame();
+  running = false;
+  clearInterval(fruitInterval);
+  clearInterval(bombInterval);
+  clearInterval(difficultyInterval);
+  startGame();
 };
 
 const startGame = () => {
   if (running) return;
   running = true;
+  paused = false;
   startBtn.style.display = 'none';
+  pauseBtn.style.display = 'inline-block';
+  restartBtn.style.display = 'inline-block';
   instructionsEl.style.display = 'none';
   gameOverEl.style.display = 'none';
   state.score = 0;
   state.fruits = [];
   state.bombs = [];
   difficulty = 1;
-  bombSpawnTime = 7000;
+  bombSpawnTime = 4000;
   createFruit();
   createBomb();
-  fruitInterval = setInterval(createFruit, 10000);
+  fruitInterval = setInterval(createFruit, 5000);
   bombInterval = setInterval(createBomb, bombSpawnTime);
-  difficultyInterval = setInterval(increaseDifficulty, 5000);
+  difficultyInterval = setInterval(increaseDifficulty, 3000);
   gameLoop();
 };
 
 startBtn.addEventListener('click', startGame);
+pauseBtn.addEventListener('click', pauseGame);
+restartBtn.addEventListener('click', restartGame);
 
 
