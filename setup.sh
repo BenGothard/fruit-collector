@@ -6,6 +6,25 @@ echo "🚀 Starting smart setup for your game..."
 BUILD_DIR="docs"
 PACKAGE_FILE="package.json"
 VITE_CONFIG="vite.config.js"
+MODULES_TARBALL="node_modules.tgz"
+MIRROR_REGISTRY="https://registry.npmmirror.com"
+MODULES_TARBALL_URL="https://bengothard.github.io/fruit-collector/node_modules.tgz"
+
+install_deps() {
+  if npm install "$@"; then
+    return 0
+  fi
+  echo "⚠️ npm install failed. Trying mirror registry..."
+  if npm install --registry "$MIRROR_REGISTRY" "$@"; then
+    return 0
+  fi
+  echo "⚠️ Mirror install failed. Attempting offline cache..."
+  if [ ! -f "$MODULES_TARBALL" ]; then
+    echo "📥 Downloading offline cache from $MODULES_TARBALL_URL"
+    curl -L -o "$MODULES_TARBALL" "$MODULES_TARBALL_URL" || return 1
+  fi
+  tar -xzf "$MODULES_TARBALL"
+}
 
 # ---- STEP 0: Environment Check ----
 if ! command -v npm &> /dev/null; then
@@ -15,8 +34,12 @@ fi
 
 # ---- STEP 1: Install Dependencies ----
 if [ -f "$PACKAGE_FILE" ]; then
-  echo "📦 Installing dependencies from $PACKAGE_FILE..."
-  npm install || { echo "❌ npm install failed."; exit 1; }
+  if [ -d "node_modules" ]; then
+    echo "📦 node_modules directory already exists. Skipping npm install."
+  else
+    echo "📦 Installing dependencies from $PACKAGE_FILE..."
+    install_deps || { echo "❌ Dependency installation failed."; exit 1; }
+  fi
 else
   echo "⚠️ $PACKAGE_FILE not found. Creating minimal Vite-compatible file..."
 
@@ -33,7 +56,7 @@ else
   }
 }
 EOL
-  npm install || { echo "❌ npm install after creation failed."; exit 1; }
+  install_deps || { echo "❌ Dependency installation failed."; exit 1; }
 fi
 
 # ---- STEP 2: Ensure Vite Config Exists ----
