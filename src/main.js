@@ -20,7 +20,15 @@ const state = {
   score: 0,
   fruits: [],
   bombs: [],
-  basket: { width: 80, height: 20, x: 0, y: 0, speed: 7, dx: 0 }
+  basket: {
+    width: 80,
+    height: 20,
+    x: 0,
+    y: 0,
+    baseSpeed: 7,
+    speedMultiplier: 1,
+    dx: 0
+  }
 };
 
 const resizeCanvas = () => {
@@ -71,10 +79,17 @@ const checkCollision = (fruit, basket) =>
   fruit.y + fruit.radius > basket.y;
 
 const handleKeyDown = e => {
+  if (e.code === 'Space') {
+    state.basket.speedMultiplier = 2;
+    if (state.basket.dx > 0)
+      state.basket.dx = state.basket.baseSpeed * 2;
+    else if (state.basket.dx < 0)
+      state.basket.dx = -state.basket.baseSpeed * 2;
+  }
   if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A')
-    state.basket.dx = -state.basket.speed;
+    state.basket.dx = -state.basket.baseSpeed * state.basket.speedMultiplier;
   if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D')
-    state.basket.dx = state.basket.speed;
+    state.basket.dx = state.basket.baseSpeed * state.basket.speedMultiplier;
 };
 
 const handleKeyUp = e => {
@@ -87,6 +102,13 @@ const handleKeyUp = e => {
     e.key === 'D'
   )
     state.basket.dx = 0;
+  if (e.code === 'Space') {
+    state.basket.speedMultiplier = 1;
+    if (state.basket.dx > 0)
+      state.basket.dx = state.basket.baseSpeed;
+    else if (state.basket.dx < 0)
+      state.basket.dx = -state.basket.baseSpeed;
+  }
 };
 
 window.addEventListener('keydown', handleKeyDown);
@@ -228,8 +250,8 @@ const startGame = () => {
   state.bombs = [];
   difficulty = 1;
   bombSpawnTime = 4000;
-  createFruit();
-  createBomb();
+  for (let i = 0; i < 5; i++) createFruit();
+  for (let i = 0; i < 3; i++) createBomb();
   fruitInterval = setInterval(createFruit, 5000);
   bombInterval = setInterval(createBomb, bombSpawnTime);
   difficultyInterval = setInterval(increaseDifficulty, 3000);
