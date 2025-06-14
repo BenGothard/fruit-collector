@@ -12,4 +12,4 @@ npm install
 npm run dev
 \`\`\`
 
-GitHub Pages deployment is automated to \`gh-pages\` branch.
+ After running `npm run build`, commit and push the generated `docs` folder on the `main` branch to update the live site.

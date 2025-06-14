@@ -1,5 +1,11 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const startBtn = document.getElementById('startBtn');
+const instructionsEl = document.getElementById('instructions');
+
+let running = false;
+let fruitInterval;
 
 const state = {
   score: 0,
@@ -84,10 +90,8 @@ const drawFruit = fruit => {
   ctx.fill();
 };
 
-const drawScore = () => {
-  ctx.fillStyle = '#000';
-  ctx.font = '20px Arial';
-  ctx.fillText(`Score: ${state.score}`, 10, 30);
+const updateScore = () => {
+  scoreEl.textContent = `Score: ${state.score}`;
 };
 
 const gameLoop = () => {
@@ -96,11 +100,22 @@ const gameLoop = () => {
   updateFruits();
   drawBasket();
   state.fruits.forEach(drawFruit);
-  drawScore();
-  requestAnimationFrame(gameLoop);
+  updateScore();
+  if (running) requestAnimationFrame(gameLoop);
 };
 
-createFruit();
-setInterval(createFruit, 10000);
+const startGame = () => {
+  if (running) return;
+  running = true;
+  startBtn.style.display = 'none';
+  instructionsEl.style.display = 'none';
+  state.score = 0;
+  state.fruits = [];
+  createFruit();
+  fruitInterval = setInterval(createFruit, 10000);
+  gameLoop();
+};
 
-gameLoop();
+startBtn.addEventListener('click', startGame);
+
+
