@@ -8,6 +8,9 @@ const gameOverEl = document.getElementById('gameOver');
 let running = false;
 let fruitInterval;
 let bombInterval;
+let difficultyInterval;
+let difficulty = 1;
+let bombSpawnTime = 7000;
 
 const state = {
   score: 0,
@@ -45,7 +48,7 @@ const createBomb = () => {
     x: Math.random() * (canvas.width - radius * 2) + radius,
     y: -radius,
     radius,
-    speed: 2 + Math.random() * 2
+    speed: (2 + Math.random() * 2) * difficulty
   });
 };
 
@@ -103,7 +106,7 @@ const updateFruits = () => {
 
 const updateBombs = () => {
   state.bombs.forEach(bomb => {
-    bomb.y += bomb.speed;
+    bomb.y += bomb.speed * difficulty;
     if (checkCollision(bomb, state.basket)) {
       endGame();
     } else if (bomb.y - bomb.radius > canvas.height) {
@@ -140,10 +143,21 @@ const updateScore = () => {
   scoreEl.textContent = `Score: ${state.score}`;
 };
 
+const increaseDifficulty = () => {
+  difficulty += 0.1;
+  if (bombSpawnTime > 2000) {
+    bombSpawnTime -= 500;
+    clearInterval(bombInterval);
+    bombInterval = setInterval(createBomb, bombSpawnTime);
+  }
+  createBomb();
+};
+
 const endGame = () => {
   running = false;
   clearInterval(fruitInterval);
   clearInterval(bombInterval);
+  clearInterval(difficultyInterval);
   gameOverEl.style.display = 'block';
   startBtn.style.display = 'inline-block';
   instructionsEl.style.display = 'block';
@@ -170,10 +184,13 @@ const startGame = () => {
   state.score = 0;
   state.fruits = [];
   state.bombs = [];
+  difficulty = 1;
+  bombSpawnTime = 7000;
   createFruit();
   createBomb();
   fruitInterval = setInterval(createFruit, 10000);
-  bombInterval = setInterval(createBomb, 7000);
+  bombInterval = setInterval(createBomb, bombSpawnTime);
+  difficultyInterval = setInterval(increaseDifficulty, 5000);
   gameLoop();
 };
 
