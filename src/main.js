@@ -3,13 +3,16 @@ const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const startBtn = document.getElementById('startBtn');
 const instructionsEl = document.getElementById('instructions');
+const gameOverEl = document.getElementById('gameOver');
 
 let running = false;
 let fruitInterval;
+let bombInterval;
 
 const state = {
   score: 0,
   fruits: [],
+  bombs: [],
   basket: { width: 80, height: 20, x: 0, y: 0, speed: 7, dx: 0 }
 };
 
@@ -36,18 +39,43 @@ const resetFruit = fruit => {
   fruit.y = -fruit.radius;
 };
 
+const createBomb = () => {
+  const radius = 15;
+  state.bombs.push({
+    x: Math.random() * (canvas.width - radius * 2) + radius,
+    y: -radius,
+    radius,
+    speed: 2 + Math.random() * 2
+  });
+};
+
+const resetBomb = bomb => {
+  bomb.x = Math.random() * (canvas.width - bomb.radius * 2) + bomb.radius;
+  bomb.y = -bomb.radius;
+};
+
 const checkCollision = (fruit, basket) =>
   fruit.x > basket.x &&
   fruit.x < basket.x + basket.width &&
   fruit.y + fruit.radius > basket.y;
 
 const handleKeyDown = e => {
-  if (e.key === 'ArrowLeft') state.basket.dx = -state.basket.speed;
-  if (e.key === 'ArrowRight') state.basket.dx = state.basket.speed;
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A')
+    state.basket.dx = -state.basket.speed;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D')
+    state.basket.dx = state.basket.speed;
 };
 
 const handleKeyUp = e => {
-  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') state.basket.dx = 0;
+  if (
+    e.key === 'ArrowLeft' ||
+    e.key === 'ArrowRight' ||
+    e.key === 'a' ||
+    e.key === 'A' ||
+    e.key === 'd' ||
+    e.key === 'D'
+  )
+    state.basket.dx = 0;
 };
 
 window.addEventListener('keydown', handleKeyDown);
@@ -73,6 +101,17 @@ const updateFruits = () => {
   });
 };
 
+const updateBombs = () => {
+  state.bombs.forEach(bomb => {
+    bomb.y += bomb.speed;
+    if (checkCollision(bomb, state.basket)) {
+      endGame();
+    } else if (bomb.y - bomb.radius > canvas.height) {
+      resetBomb(bomb);
+    }
+  });
+};
+
 const drawBasket = () => {
   ctx.fillStyle = 'brown';
   ctx.fillRect(
@@ -90,16 +129,34 @@ const drawFruit = fruit => {
   ctx.fill();
 };
 
+const drawBomb = bomb => {
+  ctx.beginPath();
+  ctx.fillStyle = 'black';
+  ctx.arc(bomb.x, bomb.y, bomb.radius, 0, Math.PI * 2);
+  ctx.fill();
+};
+
 const updateScore = () => {
   scoreEl.textContent = `Score: ${state.score}`;
+};
+
+const endGame = () => {
+  running = false;
+  clearInterval(fruitInterval);
+  clearInterval(bombInterval);
+  gameOverEl.style.display = 'block';
+  startBtn.style.display = 'inline-block';
+  instructionsEl.style.display = 'block';
 };
 
 const gameLoop = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   updateBasket();
   updateFruits();
+  updateBombs();
   drawBasket();
   state.fruits.forEach(drawFruit);
+  state.bombs.forEach(drawBomb);
   updateScore();
   if (running) requestAnimationFrame(gameLoop);
 };
@@ -109,10 +166,14 @@ const startGame = () => {
   running = true;
   startBtn.style.display = 'none';
   instructionsEl.style.display = 'none';
+  gameOverEl.style.display = 'none';
   state.score = 0;
   state.fruits = [];
+  state.bombs = [];
   createFruit();
+  createBomb();
   fruitInterval = setInterval(createFruit, 10000);
+  bombInterval = setInterval(createBomb, 7000);
   gameLoop();
 };
 
