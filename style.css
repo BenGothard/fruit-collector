@@ -1,5 +1,14 @@
-body { margin: 0; overflow: hidden; }
-#game { display: block; margin: auto; background: #eee; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background: linear-gradient(#fff9c4, #fce4ec);
+  font-family: 'Fredoka One', cursive;
+}
+#game {
+  display: block;
+  margin: auto;
+  background: #eee;
+}
 
 #ui {
   position: absolute;
@@ -14,15 +23,29 @@ body { margin: 0; overflow: hidden; }
 #score {
   font-size: 24px;
   margin: 10px 0;
+  color: #5d4037;
 }
 
 #startBtn,
 #pauseBtn,
 #restartBtn {
   pointer-events: auto;
-  padding: 10px 20px;
+  padding: 12px 28px;
   font-size: 18px;
   margin-bottom: 10px;
+  background: #ffca28;
+  border: none;
+  border-radius: 30px;
+  color: #fff;
+  box-shadow: 0 4px 0 #f57f17;
+  transition: transform 0.1s;
+}
+
+#startBtn:active,
+#pauseBtn:active,
+#restartBtn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #f57f17;
 }
 
 #instructions {
